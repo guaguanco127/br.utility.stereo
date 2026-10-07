@@ -1,14 +1,14 @@
-# Ableton Max for Live device: br.utility.stereo.1.0  
+# Ableton Max for Live device: br.utility.stereo.2.0  
    
 By Brian Riordan  
 [guaguanco127@gmail.com](mailto:guaguanco127@gmail.com)  
 [brianriordanmusic@gmail.com](mailto:brianriordanmusic@gmail.com)  
 [https://www.brianriordanmusic.com/](https://www.brianriordanmusic.com/) 
   
-Repository for br.utility.stereo.1.0, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo.1.0](https://github.com/guaguanco127/br.utility.stereo.1.0)  
+Repository for br.utility.stereo.2.0, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo](https://github.com/guaguanco127/br.utility.stereo)  
 Additional programs can be found here: [https://github.com/guaguanco127/br.max](https://github.com/guaguanco127/br.max)
 
-These files were created with Max/MSP version 8.5.6. and RNBO 1.2.3
+These files were created with Max 9.
 
 ## Table of Contents 
 
@@ -18,22 +18,25 @@ These files were created with Max/MSP version 8.5.6. and RNBO 1.2.3
 
 ## <a name="About"></a>About
 
-This is a basic patch/external/plugin/device built in Max/MSP that allows the user to adjust mix of a stereo signal, such as swapping, left only, right only, mid, or side. Additionally, the user can adjust the width or the pan of the resulting signal.Currently works in any sample rate or bit depth.
-  
-**Modes:**   
-**Stereo:** Normal stereo signal passes through  
-**Swap:** This swaps the stereo signal, so the left is coming out of the right, and the right is coming out of the left  
-**Left:** The left signal now plays through both the left and right  
-**Right:** The right signal now plays through both the left and right  
-**Mid:** Both signals added together and divided in half, in mono  
-**Side:** A mono signal that consists of only signals that were in the stereo filed (sides) but not in the middle of the signal. 
+A stereo utility: choose what reaches each side (Stereo, Swap, Left, Right, Mid, Side), narrow the image to mono or widen it past the original, and pan the result. Every change glides, so nothing clicks. Works at any sample rate.
 
-**Pan:**  
-Pans the stereo signal left (-100.0), midle (0.0), or right (100.0)
+A stereo audio effect with four controls: Mode, Pan Mode, Pan and Width. All four are Live parameters, so you can automate them or map them to a controller.
+
+**Modes:**  
+**Stereo:** the signal passes through unchanged  
+**Swap:** left comes out of the right, and right comes out of the left  
+**Left:** the left input plays on both sides  
+**Right:** the right input plays on both sides  
+**Mid:** what both sides share, (L+R)/2, on both sides (mono)  
+**Side:** what differs between the sides, (L-R)/2, on both sides (mono). Sounds panned dead center disappear  
 
 **Width:**  
-Adjusts the width of of the stereo signal. 100. is normal stereo. 0. is a mono signal.
+Width works on mid and side: it leaves the mid alone and scales the side. 0 removes the side, so the result is mono. 100 leaves the signal unchanged. 200 doubles the side: sounds already off to one side get louder and push outward, and a quieter, polarity-flipped copy on the other side makes them sound wider than the speakers. Centered sounds don't change, and the mono sum (L+R) stays exactly the same at every width. Very wide material can peak up to +6 dB at 200.
 
+**Pan Mode:**  
+Both modes leave a centered signal exactly as it is.  
+**Balance** (default, works like Ableton Utility's Balance): pan right and the left channel fades out while the right stays at full level. Never louder than the input, but at the edge the far channel is gone.  
+**Dual:** the left and right channels are each panned and summed, so panning right folds the left channel into the right side. Nothing is lost, but the near side gets louder: up to +6 dB for material that is the same on both sides, about +3 dB for wide material.
 
 ## <a name="M4L"></a>What Is a Max For Live Device?
 
@@ -41,25 +44,15 @@ Max For Live brings the power and flexibility of Max to Ableton Live. Max For Li
 
 ## <a name="Install"></a>How To Install
 
-1. Make sure you have the Ableton Live Suite installed in your computer. This was tested on version 11. Make sure Ableton is turned off while installing. 
+1. Make sure you have Ableton Live Suite installed on your computer, and that Live is closed while installing. 
 
-2. For Macintosh:  
+2. For Mac:  
 Go to your user folder  
-Then Music > Ableton > User Library > Presets > Audio Effects  
-Copy and paste br.utility.stereo.1.0.amxd into that folder
+Then Music > Ableton > User Library > Presets > Audio Effects > Max Audio Effect  
+Copy br.utility.stereo.2.0.amxd into that folder
 
 3. For Windows: \Users\[username]\Documents\Ableton\User Library\Presets\Audio Effects\Max Audio Effect  
   
 4. Open Ableton Live. On the left-hand side, look for Max for Live > Max Audio Effect and then the name of this device.
 
-5. Either double click on the device, or drag/drop it onto the track where you wish to use it.  
-    
-
-
-
- 
-
-
-
-
-
+5. Either double-click the device, or drag it onto the track where you want it.

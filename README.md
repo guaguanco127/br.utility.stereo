@@ -1,41 +1,78 @@
 # Max/MSP Patches, Abstractions, Externals, RNBO, VSTs, and Ableton Max for Live 
 
-## br.utility.stereo.1.0
-
-
-
+## br.utility.stereo.2.0
+   
 By Brian Riordan  
 [guaguanco127@gmail.com](mailto:guaguanco127@gmail.com)  
 [brianriordanmusic@gmail.com](mailto:brianriordanmusic@gmail.com)  
 [https://www.brianriordanmusic.com/](https://www.brianriordanmusic.com/) 
   
-Repository for br.utility.stereo.1.0, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo.1.0](https://github.com/guaguanco127/br.utility.stereo.1.0)  
+Repository for br.utility.stereo.2.0, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo](https://github.com/guaguanco127/br.utility.stereo)  
 Additional programs can be found here: [https://github.com/guaguanco127/br.max](https://github.com/guaguanco127/br.max)
 
-These files were created with Max/MSP version 8.5.6. and RNBO 1.2.3
+These files were created with Max 9, or RNBO.
 
 ## Links
 
-[About](#About) 
-[Ableton Max for Live Device](https://github.com/guaguanco127/br.utility.stereo.1.0/tree/main/Ableton%20Max%20For%20Live) To use inside of Ableton Suite   
-[Max/MSP Abstraction](https://github.com/guaguanco127/br.utility.stereo.1.0/tree/main/MaxMSP%20Abstraction) To use as an abstraction within Max/MSP   
-[Max/MSP External](https://github.com/guaguanco127/br.utility.stereo.1.0/tree/main/MaxMSP%20External) To use as an external object within Max/MSP     
-[Max/MSP RNBO for External or VST](https://github.com/guaguanco127/br.utility.stereo.1.0/tree/main/RNBO%20Patchers%20for%20External%20or%20VST) To build an audio plugin in VST or AU for both Mac and Windows.   
+[About](#About)  
+[Max/MSP Abstraction](https://github.com/guaguanco127/br.utility.stereo/tree/main/MaxMSP%20Abstraction) To use as an abstraction within Max/MSP   
+[Max/MSP RNBO for External or VST](https://github.com/guaguanco127/br.utility.stereo/tree/main/RNBO%20Patchers%20for%20External%20or%20VST) To build your own Max external, or a VST or AU audio plugin (needs RNBO)  
+[Ableton Max for Live Device](https://github.com/guaguanco127/br.utility.stereo/tree/main/Ableton%20Max%20For%20Live) To use inside of Ableton Suite   
 
 ## <a name="About"></a>About
 
-This is a basic patch/external/plugin/device built in Max/MSP that allows the user to adjust mix of a stereo signal, such as swapping, left only, right only, mid, or side. Additionally, the user can adjust the width or the pan of the resulting signal.Currently works in any sample rate or bit depth.
-  
-**Modes:**   
-**Stereo:** Normal stereo signal passes through  
-**Swap:** This swaps the stereo signal, so the left is coming out of the right, and the right is coming out of the left  
-**Left:** The left signal now plays through both the left and right  
-**Right:** The right signal now plays through both the left and right  
-**Mid:** Both signals added together and divided in half, in mono  
-**Side:** A mono signal that consists of only signals that were in the stereo filed (sides) but not in the middle of the signal. 
+A stereo utility: choose what reaches each side (Stereo, Swap, Left, Right, Mid, Side), narrow the image to mono or widen it past the original, and pan the result. Every change glides, so nothing clicks. Works at any sample rate.
 
-**Pan:**  
-Pans the stereo signal left (-100.0), midle (0.0), or right (100.0)
+You can use it as an abstraction within Max/MSP or as a Max for Live device within Ableton Live Suite. With RNBO you can also build your own Max external or VST/AU plugin from the included RNBO patch.
+
+**Modes:**  
+**Stereo:** the signal passes through unchanged  
+**Swap:** left comes out of the right, and right comes out of the left  
+**Left:** the left input plays on both sides  
+**Right:** the right input plays on both sides  
+**Mid:** what both sides share, (L+R)/2, on both sides (mono)  
+**Side:** what differs between the sides, (L-R)/2, on both sides (mono). Sounds panned dead center disappear  
 
 **Width:**  
-Adjusts the width of of the stereo signal. 100. is normal stereo. 0. is a mono signal.
+Width works on mid and side: it leaves the mid alone and scales the side. 0 removes the side, so the result is mono. 100 leaves the signal unchanged. 200 doubles the side: sounds already off to one side get louder and push outward, and a quieter, polarity-flipped copy on the other side makes them sound wider than the speakers. Centered sounds don't change, and the mono sum (L+R) stays exactly the same at every width. Very wide material can peak up to +6 dB at 200.
+
+**Pan Mode:**  
+Both modes leave a centered signal exactly as it is.  
+**Balance** (default, works like Ableton Utility's Balance): pan right and the left channel fades out while the right stays at full level. Never louder than the input, but at the edge the far channel is gone.  
+**Dual:** the left and right channels are each panned and summed, so panning right folds the left channel into the right side. Nothing is lost, but the near side gets louder: up to +6 dB for material that is the same on both sides, about +3 dB for wide material.
+
+## <a name="New"></a>What's new in 2.0
+
+- New Pan Mode: Balance (the default, works like Ableton Utility) or Dual (nothing lost when panning). The 1.0 pan was a balance with an uneven curve.
+- Width now goes to 200 to widen the image, built as mid/side; 0 is exact mono. 1.0 stopped at 100.
+- Side mode is now (L-R)/2, the same scale as Mid, so it is 6 dB quieter than 1.0's Side.
+- Every change glides: modes crossfade over 10 ms, and Pan and Width glide over 10 ms. Pan and Width take signals.
+- A plain version and a UI version for bpatchers (see [Which file?](#Files)).
+- One RNBO patch now makes both the Max external and the VST3/AU plugin. Prebuilt externals are no longer included: the abstraction does the same job and more, so build an external only if you need one.
+- The Max for Live parameters are named Mode, Pan, Width and Pan Mode, so they read clearly in Live's automation lanes. Pan now runs -100 to 100 (1.0's device used -50 to 50).
+- File names changed (no more `.abs`), so 1.0 patches need the new name typed in. The first five inlets are in the same order with the same Pan range; Width now reaches 200, and Pan Mode is a new sixth inlet.
+
+## <a name="Files"></a>Which file?
+
+| File | What it is |
+|---|---|
+| br.utility.stereo.2.0 | No UI. The plain object to patch with |
+| br.utility.stereo.ui.2.0 | With Mode and Pan Mode menus and Pan and Width dials, ready for a [bpatcher] |
+| _br.utility.stereo.example.2.0 | Example patch: open this first |
+
+The UI version contains the plain version and has the same inlets and outlets, so either swaps in without rewiring. Open the UI version in patching mode for comments on how it is built.
+
+## <a name="Use"></a>How To Use
+
+| Inlet | Control | Type | Range | Default |
+|---|---|---|---|---|
+| 1 | Left In | Signal | | |
+| 2 | Right In | Signal | | |
+| 3 | Mode | Signal or Int (UI: Int only) | 0 Stereo, 1 Swap, 2 Left, 3 Right, 4 Mid, 5 Side | 0 |
+| 4 | Pan | Signal or Float (UI: Float only) | -100 to 100, 0 = center | 0 |
+| 5 | Width | Signal or Float (UI: Float only) | 0 to 200: 0 = mono, 100 = unchanged, 200 = wider | 100 |
+| 6 | Pan Mode | Signal or Int (UI: Int only) | 0 = Balance, 1 = Dual | 0 |
+
+Outlets 1 / 2: Left Out / Right Out (Signal)
+
+The signal is processed in this order: Mode, then Width, then Pan. Mode and Pan Mode changes crossfade over 10 ms, and Pan and Width glide over 10 ms, so you can switch or turn anything while audio plays. Pan and Width also take signals, so an LFO can auto-pan or breathe the width. In the UI version a number into an inlet moves its control, so the screen always shows what you hear. Hover any inlet or outlet in Max for its description.
