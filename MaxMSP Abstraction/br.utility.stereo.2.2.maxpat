@@ -39,7 +39,7 @@
         "enablehscroll": 1,
         "enablevscroll": 1,
         "devicewidth": 0.0,
-        "description": "br.utility.stereo.2.1 -- Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/",
+        "description": "br.utility.stereo.2.2 -- Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/",
         "digest": "",
         "tags": "",
         "style": "",
@@ -61,7 +61,7 @@
                         360.0,
                         33.0
                     ],
-                    "text": "br.utility.stereo.2.1 -- Created by Brian Riordan, guaguanco127@gmail.com\nhttps://github.com/guaguanco127/",
+                    "text": "br.utility.stereo.2.2 -- Created by Brian Riordan, guaguanco127@gmail.com\nhttps://github.com/guaguanco127/",
                     "fontname": "Arial",
                     "fontsize": 12.0
                 }
@@ -258,7 +258,7 @@
                         405.0,
                         22.0
                     ],
-                    "text": "gen~ @title br.utility.stereo.2.1",
+                    "text": "gen~ @title br.utility.stereo.2.2",
                     "fontname": "Arial",
                     "fontsize": 12.0,
                     "patcher": {
@@ -447,7 +447,7 @@
                                         900.0
                                     ],
                                     "parameter_enable": 0,
-                                    "code": "// br.utility.stereo.2.1 -- stereo mode, width and pan\n// Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/\n// MUST MATCH: the core, the UI by reference, the RNBO host and the M4L device embed this same code\n// in1/in2 audio L/R\n// in3 mode 0 Stereo, 1 Swap, 2 Left, 3 Right, 4 Mid, 5 Side\n// in4 pan -100..100, 0 = center\n// in5 width 0..200: 0 = mono, 100 = unchanged, 200 = wider\n// in6 pan mode 0 = Balance, 1 = Dual\n// out1/out2 audio L/R\n// Order: mode -> width -> pan. Every change glides, so nothing ever clicks:\n// mode and pan mode crossfade along a 10 ms S-curve, pan and width follow a 10 ms smoother.\n\nHistory m0(1);\nHistory m1(0);\nHistory m2(0);\nHistory m3(0);\nHistory m4(0);\nHistory m5(0);\nHistory panS(0);\nHistory widS(1);\nHistory pmS(0);\n\n// read all state first\np0 = m0;\np1 = m1;\np2 = m2;\np3 = m3;\np4 = m4;\np5 = m5;\npan = panS;\nwid = widS;\npm = pmS;\n\nramp = 1 / max(1, mstosamps(10));\nk = 1 - exp(-1 / max(1, mstosamps(10)));\n\n// MODE: each mode has its own fade position; the chosen one rises, the rest fall\nmd = clip(floor(in3 + 0.5), 0, 5);\np0 = clip(p0 + ((md == 0) ? ramp : -ramp), 0, 1);\np1 = clip(p1 + ((md == 1) ? ramp : -ramp), 0, 1);\np2 = clip(p2 + ((md == 2) ? ramp : -ramp), 0, 1);\np3 = clip(p3 + ((md == 3) ? ramp : -ramp), 0, 1);\np4 = clip(p4 + ((md == 4) ? ramp : -ramp), 0, 1);\np5 = clip(p5 + ((md == 5) ? ramp : -ramp), 0, 1);\ns0 = 0.5 - 0.5 * cos(p0 * pi);\ns1 = 0.5 - 0.5 * cos(p1 * pi);\ns2 = 0.5 - 0.5 * cos(p2 * pi);\ns3 = 0.5 - 0.5 * cos(p3 * pi);\ns4 = 0.5 - 0.5 * cos(p4 * pi);\ns5 = 0.5 - 0.5 * cos(p5 * pi);\n// divide by the total so a fast double change never dips in level\nnorm = 1 / max(s0 + s1 + s2 + s3 + s4 + s5, 0.000001);\n// each mode is a 2x2 mix: L out = ll*L + rl*R, R out = lr*L + rr*R\n//   Stereo 1 0 0 1 | Swap 0 1 1 0 | Left 1 0 1 0 | Right 0 1 0 1 | Mid .5 .5 .5 .5 | Side .5 -.5 .5 -.5\nll = (s0 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrl = (s1 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nlr = (s1 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrr = (s0 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nml = in1 * ll + in2 * rl;\nmr = in1 * lr + in2 * rr;\n\n// WIDTH: mid/side. Mid = what both sides share, side = what differs; width scales the side\nwid = wid + (clip(in5, 0, 200) * 0.01 - wid) * k;\nmid = (ml + mr) * 0.5;\nside = (ml - mr) * 0.5 * wid;\nwl = mid + side;\nwr = mid - side;\n\n// PAN\npan = pan + (clip(in4, -100, 100) * 0.01 - pan) * k;\npm = clip(pm + ((in6 > 0.5) ? ramp : -ramp), 0, 1);\npf = 0.5 - 0.5 * cos(pm * pi);\nbl = 0;\nbr = 0;\ndl = 0;\ndr = 0;\nal = 0;\nar = 0;\nif (pm < 1) {\n    // Balance: the far side fades out on a quarter cosine, the near side stays at unity\n    bl = wl * cos(max(pan, 0) * pi * 0.5);\n    br = wr * cos(max(-pan, 0) * pi * 0.5);\n}\nif (pm > 0) {\n    // Dual: L and R are each panned with constant power and summed. Center = L hard left,\n    // R hard right, at unity. Panning moves both together, so the far channel folds in\n    al = (clip(pan * 2 - 1, -1, 1) + 1) * pi * 0.25;\n    ar = (clip(pan * 2 + 1, -1, 1) + 1) * pi * 0.25;\n    dl = wl * cos(al) + wr * cos(ar);\n    dr = wl * sin(al) + wr * sin(ar);\n}\n\n// write state last\nm0 = p0;\nm1 = p1;\nm2 = p2;\nm3 = p3;\nm4 = p4;\nm5 = p5;\npanS = pan;\nwidS = wid;\npmS = pm;\n\nout1 = bl + (dl - bl) * pf;\nout2 = br + (dr - br) * pf;\n",
+                                    "code": "// br.utility.stereo.2.2 -- stereo mode, width and pan\n// Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/\n// MUST MATCH: the core, the UI by reference, the RNBO host and the M4L device embed this same code\n// in1/in2 audio L/R\n// in3 mode 0 Stereo, 1 Swap, 2 Left, 3 Right, 4 Mid, 5 Side\n// in4 pan -100..100, 0 = center\n// in5 width 0..200: 0 = mono, 100 = unchanged, 200 = wider\n// in6 pan mode 0 = Balance, 1 = Dual\n// out1/out2 audio L/R\n// Order: mode -> width -> pan. Every change glides, so nothing ever clicks:\n// mode and pan mode crossfade along a 10 ms S-curve, pan and width follow a 10 ms smoother.\n\nHistory m0(1);\nHistory m1(0);\nHistory m2(0);\nHistory m3(0);\nHistory m4(0);\nHistory m5(0);\nHistory panS(0);\nHistory widS(1);\nHistory pmS(0);\n\n// read all state first\np0 = m0;\np1 = m1;\np2 = m2;\np3 = m3;\np4 = m4;\np5 = m5;\npan = panS;\nwid = widS;\npm = pmS;\n\nramp = 1 / max(1, mstosamps(10));\nk = 1 - exp(-1 / max(1, mstosamps(10)));\n\n// MODE: each mode has its own fade position; the chosen one rises, the rest fall\nmd = clip(floor(in3 + 0.5), 0, 5);\np0 = clip(p0 + ((md == 0) ? ramp : -ramp), 0, 1);\np1 = clip(p1 + ((md == 1) ? ramp : -ramp), 0, 1);\np2 = clip(p2 + ((md == 2) ? ramp : -ramp), 0, 1);\np3 = clip(p3 + ((md == 3) ? ramp : -ramp), 0, 1);\np4 = clip(p4 + ((md == 4) ? ramp : -ramp), 0, 1);\np5 = clip(p5 + ((md == 5) ? ramp : -ramp), 0, 1);\ns0 = 0.5 - 0.5 * cos(p0 * pi);\ns1 = 0.5 - 0.5 * cos(p1 * pi);\ns2 = 0.5 - 0.5 * cos(p2 * pi);\ns3 = 0.5 - 0.5 * cos(p3 * pi);\ns4 = 0.5 - 0.5 * cos(p4 * pi);\ns5 = 0.5 - 0.5 * cos(p5 * pi);\n// divide by the total so a fast double change never dips in level\nnorm = 1 / max(s0 + s1 + s2 + s3 + s4 + s5, 0.000001);\n// each mode is a 2x2 mix: L out = ll*L + rl*R, R out = lr*L + rr*R\n//   Stereo 1 0 0 1 | Swap 0 1 1 0 | Left 1 0 1 0 | Right 0 1 0 1 | Mid .5 .5 .5 .5 | Side .5 -.5 .5 -.5\nll = (s0 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrl = (s1 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nlr = (s1 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrr = (s0 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nml = in1 * ll + in2 * rl;\nmr = in1 * lr + in2 * rr;\n\n// WIDTH: mid/side. Mid = what both sides share, side = what differs; width scales the side\nwid = wid + (clip(in5, 0, 200) * 0.01 - wid) * k;\nmid = (ml + mr) * 0.5;\nside = (ml - mr) * 0.5 * wid;\nwl = mid + side;\nwr = mid - side;\n\n// PAN\npan = pan + (clip(in4, -100, 100) * 0.01 - pan) * k;\npm = clip(pm + ((in6 > 0.5) ? ramp : -ramp), 0, 1);\npf = 0.5 - 0.5 * cos(pm * pi);\nbl = 0;\nbr = 0;\ndl = 0;\ndr = 0;\nal = 0;\nar = 0;\nif (pm < 1) {\n    // Balance: the far side fades out on a quarter cosine, the near side stays at unity\n    bl = wl * cos(max(pan, 0) * pi * 0.5);\n    br = wr * cos(max(-pan, 0) * pi * 0.5);\n}\nif (pm > 0) {\n    // Dual: L and R are each panned with constant power and summed. Center = L hard left,\n    // R hard right, at unity. Panning moves both together, so the far channel folds in\n    al = (clip(pan * 2 - 1, -1, 1) + 1) * pi * 0.25;\n    ar = (clip(pan * 2 + 1, -1, 1) + 1) * pi * 0.25;\n    dl = wl * cos(al) + wr * cos(ar);\n    dr = wl * sin(al) + wr * sin(ar);\n}\n\n// write state last\nm0 = p0;\nm1 = p1;\nm2 = p2;\nm3 = p3;\nm4 = p4;\nm5 = p5;\npanS = pan;\nwidS = wid;\npmS = pm;\n\nout1 = bl + (dl - bl) * pf;\nout2 = br + (dr - br) * pf;\n",
                                     "fontname": "Arial",
                                     "fontsize": 12.0
                                 }
@@ -603,7 +603,7 @@
                         400.0,
                         141.0
                     ],
-                    "text": "Stereo utility: Mode picks what reaches each side (Stereo, Swap, Left, Right, Mid, Side), Width narrows to mono or widens (mid/side), Pan moves the result. Pan Mode 0 = Balance, like Ableton Utility: never louder, the far side fades out. 1 = Dual: both channels are panned and summed, nothing is lost, up to +6 dB on the near side. Every change glides over 10 ms, so nothing clicks. Pan and Width also take signals (LFOs). State outlet (last): every number that changes a control goes out as mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1, through [change] so repeats are dropped. Signals feed the gen~ only and are not reported.",
+                    "text": "Stereo utility: Mode picks what reaches each side (Stereo, Swap, Left, Right, Mid, Side), Width narrows to mono or widens (mid/side), Pan moves the result. Pan Mode 0 = Balance, like Ableton Utility: never louder, the far side fades out. 1 = Dual: both channels are panned and summed, nothing is lost, up to +6 dB on the near side. Every change glides over 10 ms, so nothing clicks. Pan and Width also take signals (LFOs). No State outlet here: whatever drives the core already knows the values. The .ui version reports its controls.",
                     "fontname": "Arial",
                     "fontsize": 12.0
                 }
@@ -622,190 +622,6 @@
                         20.0
                     ],
                     "text": "Width starts at 100",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "outlet",
-                    "id": "obj-1",
-                    "numinlets": 1,
-                    "numoutlets": 0,
-                    "outlettype": [],
-                    "patching_rect": [
-                        165.0,
-                        286.0,
-                        30.0,
-                        30.0
-                    ],
-                    "comment": "State (Message): mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1, sent the moment a control changes. Numbers only (signals are not reported). Pick them out by name: [route mode pan width panmode]"
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-2",
-                    "numinlets": 1,
-                    "numoutlets": 3,
-                    "outlettype": [
-                        "",
-                        "",
-                        ""
-                    ],
-                    "patching_rect": [
-                        165.0,
-                        216.0,
-                        72.0,
-                        22.0
-                    ],
-                    "text": "change 0",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-3",
-                    "numinlets": 1,
-                    "numoutlets": 1,
-                    "outlettype": [
-                        ""
-                    ],
-                    "patching_rect": [
-                        165.0,
-                        246.0,
-                        100.0,
-                        22.0
-                    ],
-                    "text": "prepend mode",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-4",
-                    "numinlets": 1,
-                    "numoutlets": 3,
-                    "outlettype": [
-                        "",
-                        "",
-                        ""
-                    ],
-                    "patching_rect": [
-                        285.0,
-                        216.0,
-                        79.0,
-                        22.0
-                    ],
-                    "text": "change 0.",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-5",
-                    "numinlets": 1,
-                    "numoutlets": 1,
-                    "outlettype": [
-                        ""
-                    ],
-                    "patching_rect": [
-                        285.0,
-                        246.0,
-                        93.0,
-                        22.0
-                    ],
-                    "text": "prepend pan",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-6",
-                    "numinlets": 1,
-                    "numoutlets": 3,
-                    "outlettype": [
-                        "",
-                        "",
-                        ""
-                    ],
-                    "patching_rect": [
-                        405.0,
-                        216.0,
-                        79.0,
-                        22.0
-                    ],
-                    "text": "change 0.",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-7",
-                    "numinlets": 1,
-                    "numoutlets": 1,
-                    "outlettype": [
-                        ""
-                    ],
-                    "patching_rect": [
-                        405.0,
-                        246.0,
-                        107.0,
-                        22.0
-                    ],
-                    "text": "prepend width",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-8",
-                    "numinlets": 1,
-                    "numoutlets": 3,
-                    "outlettype": [
-                        "",
-                        "",
-                        ""
-                    ],
-                    "patching_rect": [
-                        525.0,
-                        216.0,
-                        72.0,
-                        22.0
-                    ],
-                    "text": "change 0",
-                    "fontname": "Arial",
-                    "fontsize": 12.0
-                }
-            },
-            {
-                "box": {
-                    "maxclass": "newobj",
-                    "id": "obj-9",
-                    "numinlets": 1,
-                    "numoutlets": 1,
-                    "outlettype": [
-                        ""
-                    ],
-                    "patching_rect": [
-                        525.0,
-                        246.0,
-                        121.0,
-                        22.0
-                    ],
-                    "text": "prepend panmode",
                     "fontname": "Arial",
                     "fontsize": 12.0
                 }
@@ -916,150 +732,6 @@
                     ],
                     "destination": [
                         "obj-out2",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-in3",
-                        0
-                    ],
-                    "destination": [
-                        "obj-2",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-2",
-                        0
-                    ],
-                    "destination": [
-                        "obj-3",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-3",
-                        0
-                    ],
-                    "destination": [
-                        "obj-1",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-in4",
-                        0
-                    ],
-                    "destination": [
-                        "obj-4",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-4",
-                        0
-                    ],
-                    "destination": [
-                        "obj-5",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-5",
-                        0
-                    ],
-                    "destination": [
-                        "obj-1",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-in5",
-                        0
-                    ],
-                    "destination": [
-                        "obj-6",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-6",
-                        0
-                    ],
-                    "destination": [
-                        "obj-7",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-7",
-                        0
-                    ],
-                    "destination": [
-                        "obj-1",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-in6",
-                        0
-                    ],
-                    "destination": [
-                        "obj-8",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-8",
-                        0
-                    ],
-                    "destination": [
-                        "obj-9",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-9",
-                        0
-                    ],
-                    "destination": [
-                        "obj-1",
                         0
                     ]
                 }

@@ -15,7 +15,7 @@
             1160.0,
             620.0
         ],
-        "description": "_br.utility.stereo.example.2.1 -- Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/",
+        "description": "_br.utility.stereo.example.2.2 -- Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/",
         "boxes": [
             {
                 "box": {
@@ -32,7 +32,7 @@
                         463.0,
                         33.0
                     ],
-                    "text": "_br.utility.stereo.example.2.1 -- Created by Brian Riordan, guaguanco127@gmail.com\nhttps://github.com/guaguanco127/"
+                    "text": "_br.utility.stereo.example.2.2 -- Created by Brian Riordan, guaguanco127@gmail.com\nhttps://github.com/guaguanco127/"
                 }
             },
             {
@@ -85,7 +85,7 @@
                         439.0,
                         60.0
                     ],
-                    "text": "Two files, same DSP inside:\nbr.utility.stereo.2.1 = core, no UI (in: L, R, Mode, Pan, Width, Pan Mode)\nbr.utility.stereo.ui.2.1 = the same with controls, for bpatchers\nUI and core have the same inlets and outlets, so either swaps in without rewiring."
+                    "text": "Two files, same DSP inside:\nbr.utility.stereo.2.2 = core, no UI (in: L, R, Mode, Pan, Width, Pan Mode)\nbr.utility.stereo.ui.2.2 = the same with controls, for bpatchers\nUI and core have the same inlets and audio outlets (the UI adds State last), so either swaps in without rewiring."
                 }
             },
             {
@@ -488,7 +488,7 @@
                         220.0,
                         20.0
                     ],
-                    "text": "A: br.utility.stereo.ui.2.1"
+                    "text": "A: br.utility.stereo.ui.2.2"
                 }
             },
             {
@@ -502,7 +502,7 @@
                     "lockeddragscroll": 0,
                     "lockedsize": 0,
                     "maxclass": "bpatcher",
-                    "name": "br.utility.stereo.ui.2.1.maxpat",
+                    "name": "br.utility.stereo.ui.2.2.maxpat",
                     "numinlets": 6,
                     "numoutlets": 3,
                     "offset": [
@@ -685,7 +685,7 @@
                     "id": "obj-b",
                     "maxclass": "newobj",
                     "numinlets": 6,
-                    "numoutlets": 3,
+                    "numoutlets": 2,
                     "outlettype": [
                         "signal",
                         "signal",
@@ -697,7 +697,7 @@
                         240.0,
                         22.0
                     ],
-                    "text": "br.utility.stereo.2.1"
+                    "text": "br.utility.stereo.2.2"
                 }
             },
             {
@@ -860,7 +860,7 @@
                         560.0,
                         47.0
                     ],
-                    "text": "State outlet: every UI and core has a last outlet that sends mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1 the moment a control changes (numbers only, not signals). Open [p State outlet] (also a tab at the top) to see it read by name with [route mode pan width panmode].",
+                    "text": "State outlet: the UI has a last outlet that sends mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1 the moment a control changes. The core has none: whatever drives it already knows the values. Open [p State outlet] (also a tab at the top) to see it read by name with [route mode pan width panmode].",
                     "fontname": "Arial",
                     "fontsize": 12.0
                 }
@@ -959,7 +959,7 @@
                                         600.0,
                                         47.0
                                     ],
-                                    "text": "Each br.utility.stereo UI/core sends its state out of its LAST outlet as named messages: mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1, the moment a control changes. Read them by NAME with [route mode pan width panmode], never by position: names stay put when a tool gains controls.",
+                                    "text": "Each br.utility.stereo UI sends its state out of its LAST outlet as named messages: mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1, the moment a control changes. Read them by NAME with [route mode pan width panmode], never by position: names stay put when a tool gains controls.",
                                     "fontname": "Arial",
                                     "fontsize": 12.0
                                 }

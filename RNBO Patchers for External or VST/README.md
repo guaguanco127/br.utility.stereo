@@ -1,11 +1,11 @@
-# Max/MSP RNBO Patch for External or VST Creation: br.utility.stereo.rnbo.2.1  
+# Max/MSP RNBO Patch for External or VST Creation: br.utility.stereo.rnbo.2.2  
    
 By Brian Riordan  
 [guaguanco127@gmail.com](mailto:guaguanco127@gmail.com)  
 [brianriordanmusic@gmail.com](mailto:brianriordanmusic@gmail.com)  
 [https://www.brianriordanmusic.com/](https://www.brianriordanmusic.com/) 
   
-Repository for br.utility.stereo.2.1, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo](https://github.com/guaguanco127/br.utility.stereo)  
+Repository for br.utility.stereo.2.2, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo](https://github.com/guaguanco127/br.utility.stereo)  
 Additional programs can be found here: [https://github.com/guaguanco127/br.max](https://github.com/guaguanco127/br.max)
 
 These files were created with Max 9 and RNBO.
@@ -22,9 +22,9 @@ These files were created with Max 9 and RNBO.
 
 A stereo utility: choose what reaches each side (Stereo, Swap, Left, Right, Mid, Side), narrow the image to mono or widen it past the original, and pan the result. Every change glides, so nothing clicks. Works at any sample rate.
 
-One patch now does both jobs (1.0 had two). Inside [rnbo~], the Mode, Pan, Width and Pan_Mode params are the plugin parameters, and inlets 3 to 6 set the same params, so the external has the same six inlets as the abstraction: L, R, Mode, Pan, Width, Pan Mode. The gen~ code inside is the same as br.utility.stereo.2.1.
+One patch now does both jobs (1.0 had two). Inside [rnbo~], the Mode, Pan, Width and Pan_Mode params are the plugin parameters, and inlets 3 to 6 set the same params, so the external has the same six inlets as the abstraction: L, R, Mode, Pan, Width, Pan Mode. The gen~ code inside is the same as br.utility.stereo.2.2.
 
-The settings also come out of [rnbo~]'s rightmost outlet as `mode 0`, `pan -25.`, `width 150.` and `panmode 0` the moment they change ([outport mode], [outport pan], [outport width] and [outport panmode] inside), matching the State outlet of the abstractions. The patch shows it picked out with [route mode pan width panmode].
+There is no State output (as of 2.2): whatever drives the external or plugin already knows the values, and in a DAW they are normal plugin parameters.
 
 ## <a name="External"></a>What is an External for Max/MSP?
 
@@ -38,7 +38,7 @@ A VST is a third party audio plugin generally run within a digital audio worksta
 
 1. Make sure Max 9 is installed on your computer, and that you have an RNBO license.
 
-2. Open br.utility.stereo.rnbo.2.1.maxpat.
+2. Open br.utility.stereo.rnbo.2.2.maxpat.
 
 3. Double-click the [rnbo~] object while the patch is locked.
 
@@ -46,11 +46,11 @@ A VST is a third party audio plugin generally run within a digital audio worksta
 
 5. Select "Max External Export".
 
-6. Name the object br.utility.stereo.2.1~ and export.
+6. Name the object br.utility.stereo.2.2~ and export.
 
-**Keep the ~ at the end of the name.** Without it, the external has exactly the same name as the abstraction br.utility.stereo.2.1, and Max loads whichever one it finds first, so you can't be sure which one you're using. The ~ also follows the Max convention for objects that process audio. Any other name is fine as long as it isn't the name of an abstraction you also use.
+**Keep the ~ at the end of the name.** Without it, the external has exactly the same name as the abstraction br.utility.stereo.2.2, and Max loads whichever one it finds first, so you can't be sure which one you're using. The ~ also follows the Max convention for objects that process audio. Any other name is fine as long as it isn't the name of an abstraction you also use.
 
-7. Copy the exported .mxo (Mac) or .mxe64 (Windows) into a folder on Max's search path, for example Documents/Max 9/Externals, and add that folder in Options > File Preferences if it isn't listed. Then create an object called br.utility.stereo.2.1~ in any patch. It has the same inlets as the abstraction (L, R, Mode, Pan, Width, Pan Mode), except that Mode, Pan, Width and Pan Mode take numbers only.
+7. Copy the exported .mxo (Mac) or .mxe64 (Windows) into a folder on Max's search path, for example Documents/Max 9/Externals, and add that folder in Options > File Preferences if it isn't listed. Then create an object called br.utility.stereo.2.2~ in any patch. It has the same inlets as the abstraction (L, R, Mode, Pan, Width, Pan Mode), except that Mode, Pan, Width and Pan Mode take numbers only.
 
 ## <a name="ExportVST"></a>How To Export as a VST or AU Audio Plugin
 
@@ -58,7 +58,7 @@ A VST is a third party audio plugin generally run within a digital audio worksta
 
 1. Make sure Max 9 is installed on your computer, and that you have an RNBO license.
 
-2. Open br.utility.stereo.rnbo.2.1.maxpat.
+2. Open br.utility.stereo.rnbo.2.2.maxpat.
 
 3. Double-click the [rnbo~] object while the patch is locked.
 

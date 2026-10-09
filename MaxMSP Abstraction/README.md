@@ -1,11 +1,11 @@
-# Max/MSP Abstraction: br.utility.stereo.2.1  
+# Max/MSP Abstraction: br.utility.stereo.2.2  
    
 By Brian Riordan  
 [guaguanco127@gmail.com](mailto:guaguanco127@gmail.com)  
 [brianriordanmusic@gmail.com](mailto:brianriordanmusic@gmail.com)  
 [https://www.brianriordanmusic.com/](https://www.brianriordanmusic.com/) 
   
-Repository for br.utility.stereo.2.1, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo](https://github.com/guaguanco127/br.utility.stereo)  
+Repository for br.utility.stereo.2.2, with all related files, can be found here: [https://github.com/guaguanco127/br.utility.stereo](https://github.com/guaguanco127/br.utility.stereo)  
 Additional programs can be found here: [https://github.com/guaguanco127/br.max](https://github.com/guaguanco127/br.max)
 
 These files were created with Max 9.
@@ -43,11 +43,11 @@ Both modes leave a centered signal exactly as it is.
 
 | File | What it is |
 |---|---|
-| br.utility.stereo.2.1 | No UI. The plain object to patch with |
-| br.utility.stereo.ui.2.1 | With Mode and Pan Mode menus and Pan and Width dials, ready for a [bpatcher] |
-| _br.utility.stereo.example.2.1 | Example patch: open this first |
+| br.utility.stereo.2.2 | No UI. The plain object to patch with |
+| br.utility.stereo.ui.2.2 | With Mode and Pan Mode menus and Pan and Width dials, ready for a [bpatcher] |
+| _br.utility.stereo.example.2.2 | Example patch: open this first |
 
-The UI version contains the plain version and has the same inlets and outlets, so either swaps in without rewiring. Open the UI version in patching mode for comments on how it is built.
+The UI version contains the plain version and has the same inlets and audio outlets (plus State last), so either swaps in without rewiring. Open the UI version in patching mode for comments on how it is built.
 
 ## <a name="Abstraction"></a>What is an Abstraction?
 
@@ -59,9 +59,9 @@ By saving your logic in an abstraction, you can create modules that can be used 
 
 1. Make sure you have Max 9 installed, and that the Max patch you are using is saved inside a folder.  
 
-2. Copy the .maxpat files you want into the same folder as your patch. The UI version needs the plain version next to it (br.utility.stereo.ui.2.1 uses br.utility.stereo.2.1).
+2. Copy the .maxpat files you want into the same folder as your patch. The UI version needs the plain version next to it (br.utility.stereo.ui.2.2 uses br.utility.stereo.2.2).
 
-3. In your patch, create an object called br.utility.stereo.2.1. For the version with controls, create a [bpatcher] and choose br.utility.stereo.ui.2.1.maxpat as its patcher.
+3. In your patch, create an object called br.utility.stereo.2.2. For the version with controls, create a [bpatcher] and choose br.utility.stereo.ui.2.2.maxpat as its patcher.
 
 ## <a name="Use"></a>How To Use
 
@@ -75,13 +75,13 @@ By saving your logic in an abstraction, you can create modules that can be used 
 | 6 | Pan Mode | Signal or Int (UI: Int only) | 0 = Balance, 1 = Dual | 0 |
 
 Outlets 1 / 2: Left Out / Right Out (Signal)  
-Outlet 3: State (Message), see [State outlet](#State)
+Outlet 3 (UI version only): State (Message), see [State outlet](#State)
 
 The signal is processed in this order: Mode, then Width, then Pan. Mode and Pan Mode changes crossfade over 10 ms, and Pan and Width glide over 10 ms, so you can switch or turn anything while audio plays. Pan and Width also take signals, so an LFO can auto-pan or breathe the width. In the UI version a number into an inlet moves its control, so the screen always shows what you hear. Hover any inlet or outlet in Max for its description.
 
 ## <a name="State"></a>State outlet
 
-The last outlet of every abstraction (State) sends the current settings as named messages the moment they change: `mode 0`, `pan -25.`, `width 150.` and `panmode 0`. Use it to keep a display, Mira or another patch in sync. Pick it out by name with [route mode pan width panmode], not by position, so your patch keeps working if a later version adds controls. Repeats are filtered out.
+The last outlet of the UI version (State) sends the current settings as named messages the moment they change: `mode 0`, `pan -25.`, `width 150.` and `panmode 0`. Use it to keep a display, Mira or another patch in sync. Pick it out by name with [route mode pan width panmode], not by position, so your patch keeps working if a later version adds controls. Repeats are filtered out.
 
 | Message | Type | Range |
 |---|---|---|
@@ -90,7 +90,7 @@ The last outlet of every abstraction (State) sends the current settings as named
 | width | Float | 0 to 200, 100 = unchanged |
 | panmode | Int | 0 = Balance, 1 = Dual |
 
-Only numbers are reported: if a signal drives the Mode, Pan, Width or Pan Mode inlet of the plain version, nothing comes out of State. Mode and Pan Mode are sent as menu indexes, the same numbers their inlets take, so a State message can go straight back into an inlet. The example patch has a State outlet tab that shows all of this, and the RNBO patch shows the same [route mode pan width panmode].
+The plain version has no State outlet: whatever drives it already knows the values. Mode and Pan Mode are sent as menu indexes, the same numbers their inlets take, so a State message can go straight back into an inlet. The example patch has a State outlet tab that shows all of this.
 
 
 Double-click the object to see inside it and study how it was built.

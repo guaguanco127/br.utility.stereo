@@ -15,7 +15,7 @@
             416.0,
             638.0
         ],
-        "description": "br.utility.stereo.rnbo.2.1 -- Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/",
+        "description": "br.utility.stereo.rnbo.2.2 -- Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/",
         "boxes": [
             {
                 "box": {
@@ -30,7 +30,7 @@
                         520.0,
                         33.0
                     ],
-                    "text": "br.utility.stereo.rnbo.2.1 -- Created by Brian Riordan, guaguanco127@gmail.com\nhttps://github.com/guaguanco127/"
+                    "text": "br.utility.stereo.rnbo.2.2 -- Created by Brian Riordan, guaguanco127@gmail.com\nhttps://github.com/guaguanco127/"
                 }
             },
             {
@@ -606,7 +606,7 @@
                                                         "numinlets": 6,
                                                         "numoutlets": 2,
                                                         "fontname": "<Monospaced>",
-                                                        "code": "// br.utility.stereo.2.1 -- stereo mode, width and pan\n// Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/\n// MUST MATCH: the core, the UI by reference, the RNBO host and the M4L device embed this same code\n// in1/in2 audio L/R\n// in3 mode 0 Stereo, 1 Swap, 2 Left, 3 Right, 4 Mid, 5 Side\n// in4 pan -100..100, 0 = center\n// in5 width 0..200: 0 = mono, 100 = unchanged, 200 = wider\n// in6 pan mode 0 = Balance, 1 = Dual\n// out1/out2 audio L/R\n// Order: mode -> width -> pan. Every change glides, so nothing ever clicks:\n// mode and pan mode crossfade along a 10 ms S-curve, pan and width follow a 10 ms smoother.\n\nHistory m0(1);\nHistory m1(0);\nHistory m2(0);\nHistory m3(0);\nHistory m4(0);\nHistory m5(0);\nHistory panS(0);\nHistory widS(1);\nHistory pmS(0);\n\n// read all state first\np0 = m0;\np1 = m1;\np2 = m2;\np3 = m3;\np4 = m4;\np5 = m5;\npan = panS;\nwid = widS;\npm = pmS;\n\nramp = 1 / max(1, mstosamps(10));\nk = 1 - exp(-1 / max(1, mstosamps(10)));\n\n// MODE: each mode has its own fade position; the chosen one rises, the rest fall\nmd = clip(floor(in3 + 0.5), 0, 5);\np0 = clip(p0 + ((md == 0) ? ramp : -ramp), 0, 1);\np1 = clip(p1 + ((md == 1) ? ramp : -ramp), 0, 1);\np2 = clip(p2 + ((md == 2) ? ramp : -ramp), 0, 1);\np3 = clip(p3 + ((md == 3) ? ramp : -ramp), 0, 1);\np4 = clip(p4 + ((md == 4) ? ramp : -ramp), 0, 1);\np5 = clip(p5 + ((md == 5) ? ramp : -ramp), 0, 1);\ns0 = 0.5 - 0.5 * cos(p0 * pi);\ns1 = 0.5 - 0.5 * cos(p1 * pi);\ns2 = 0.5 - 0.5 * cos(p2 * pi);\ns3 = 0.5 - 0.5 * cos(p3 * pi);\ns4 = 0.5 - 0.5 * cos(p4 * pi);\ns5 = 0.5 - 0.5 * cos(p5 * pi);\n// divide by the total so a fast double change never dips in level\nnorm = 1 / max(s0 + s1 + s2 + s3 + s4 + s5, 0.000001);\n// each mode is a 2x2 mix: L out = ll*L + rl*R, R out = lr*L + rr*R\n//   Stereo 1 0 0 1 | Swap 0 1 1 0 | Left 1 0 1 0 | Right 0 1 0 1 | Mid .5 .5 .5 .5 | Side .5 -.5 .5 -.5\nll = (s0 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrl = (s1 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nlr = (s1 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrr = (s0 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nml = in1 * ll + in2 * rl;\nmr = in1 * lr + in2 * rr;\n\n// WIDTH: mid/side. Mid = what both sides share, side = what differs; width scales the side\nwid = wid + (clip(in5, 0, 200) * 0.01 - wid) * k;\nmid = (ml + mr) * 0.5;\nside = (ml - mr) * 0.5 * wid;\nwl = mid + side;\nwr = mid - side;\n\n// PAN\npan = pan + (clip(in4, -100, 100) * 0.01 - pan) * k;\npm = clip(pm + ((in6 > 0.5) ? ramp : -ramp), 0, 1);\npf = 0.5 - 0.5 * cos(pm * pi);\nbl = 0;\nbr = 0;\ndl = 0;\ndr = 0;\nal = 0;\nar = 0;\nif (pm < 1) {\n    // Balance: the far side fades out on a quarter cosine, the near side stays at unity\n    bl = wl * cos(max(pan, 0) * pi * 0.5);\n    br = wr * cos(max(-pan, 0) * pi * 0.5);\n}\nif (pm > 0) {\n    // Dual: L and R are each panned with constant power and summed. Center = L hard left,\n    // R hard right, at unity. Panning moves both together, so the far channel folds in\n    al = (clip(pan * 2 - 1, -1, 1) + 1) * pi * 0.25;\n    ar = (clip(pan * 2 + 1, -1, 1) + 1) * pi * 0.25;\n    dl = wl * cos(al) + wr * cos(ar);\n    dr = wl * sin(al) + wr * sin(ar);\n}\n\n// write state last\nm0 = p0;\nm1 = p1;\nm2 = p2;\nm3 = p3;\nm4 = p4;\nm5 = p5;\npanS = pan;\nwidS = wid;\npmS = pm;\n\nout1 = bl + (dl - bl) * pf;\nout2 = br + (dr - br) * pf;\n"
+                                                        "code": "// br.utility.stereo.2.2 -- stereo mode, width and pan\n// Created by Brian Riordan, guaguanco127@gmail.com -- https://github.com/guaguanco127/\n// MUST MATCH: the core, the UI by reference, the RNBO host and the M4L device embed this same code\n// in1/in2 audio L/R\n// in3 mode 0 Stereo, 1 Swap, 2 Left, 3 Right, 4 Mid, 5 Side\n// in4 pan -100..100, 0 = center\n// in5 width 0..200: 0 = mono, 100 = unchanged, 200 = wider\n// in6 pan mode 0 = Balance, 1 = Dual\n// out1/out2 audio L/R\n// Order: mode -> width -> pan. Every change glides, so nothing ever clicks:\n// mode and pan mode crossfade along a 10 ms S-curve, pan and width follow a 10 ms smoother.\n\nHistory m0(1);\nHistory m1(0);\nHistory m2(0);\nHistory m3(0);\nHistory m4(0);\nHistory m5(0);\nHistory panS(0);\nHistory widS(1);\nHistory pmS(0);\n\n// read all state first\np0 = m0;\np1 = m1;\np2 = m2;\np3 = m3;\np4 = m4;\np5 = m5;\npan = panS;\nwid = widS;\npm = pmS;\n\nramp = 1 / max(1, mstosamps(10));\nk = 1 - exp(-1 / max(1, mstosamps(10)));\n\n// MODE: each mode has its own fade position; the chosen one rises, the rest fall\nmd = clip(floor(in3 + 0.5), 0, 5);\np0 = clip(p0 + ((md == 0) ? ramp : -ramp), 0, 1);\np1 = clip(p1 + ((md == 1) ? ramp : -ramp), 0, 1);\np2 = clip(p2 + ((md == 2) ? ramp : -ramp), 0, 1);\np3 = clip(p3 + ((md == 3) ? ramp : -ramp), 0, 1);\np4 = clip(p4 + ((md == 4) ? ramp : -ramp), 0, 1);\np5 = clip(p5 + ((md == 5) ? ramp : -ramp), 0, 1);\ns0 = 0.5 - 0.5 * cos(p0 * pi);\ns1 = 0.5 - 0.5 * cos(p1 * pi);\ns2 = 0.5 - 0.5 * cos(p2 * pi);\ns3 = 0.5 - 0.5 * cos(p3 * pi);\ns4 = 0.5 - 0.5 * cos(p4 * pi);\ns5 = 0.5 - 0.5 * cos(p5 * pi);\n// divide by the total so a fast double change never dips in level\nnorm = 1 / max(s0 + s1 + s2 + s3 + s4 + s5, 0.000001);\n// each mode is a 2x2 mix: L out = ll*L + rl*R, R out = lr*L + rr*R\n//   Stereo 1 0 0 1 | Swap 0 1 1 0 | Left 1 0 1 0 | Right 0 1 0 1 | Mid .5 .5 .5 .5 | Side .5 -.5 .5 -.5\nll = (s0 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrl = (s1 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nlr = (s1 + s2 + 0.5 * s4 + 0.5 * s5) * norm;\nrr = (s0 + s3 + 0.5 * s4 - 0.5 * s5) * norm;\nml = in1 * ll + in2 * rl;\nmr = in1 * lr + in2 * rr;\n\n// WIDTH: mid/side. Mid = what both sides share, side = what differs; width scales the side\nwid = wid + (clip(in5, 0, 200) * 0.01 - wid) * k;\nmid = (ml + mr) * 0.5;\nside = (ml - mr) * 0.5 * wid;\nwl = mid + side;\nwr = mid - side;\n\n// PAN\npan = pan + (clip(in4, -100, 100) * 0.01 - pan) * k;\npm = clip(pm + ((in6 > 0.5) ? ramp : -ramp), 0, 1);\npf = 0.5 - 0.5 * cos(pm * pi);\nbl = 0;\nbr = 0;\ndl = 0;\ndr = 0;\nal = 0;\nar = 0;\nif (pm < 1) {\n    // Balance: the far side fades out on a quarter cosine, the near side stays at unity\n    bl = wl * cos(max(pan, 0) * pi * 0.5);\n    br = wr * cos(max(-pan, 0) * pi * 0.5);\n}\nif (pm > 0) {\n    // Dual: L and R are each panned with constant power and summed. Center = L hard left,\n    // R hard right, at unity. Panning moves both together, so the far channel folds in\n    al = (clip(pan * 2 - 1, -1, 1) + 1) * pi * 0.25;\n    ar = (clip(pan * 2 + 1, -1, 1) + 1) * pi * 0.25;\n    dl = wl * cos(al) + wr * cos(ar);\n    dr = wl * sin(al) + wr * sin(ar);\n}\n\n// write state last\nm0 = p0;\nm1 = p1;\nm2 = p2;\nm3 = p3;\nm4 = p4;\nm5 = p5;\npanS = pan;\nwidS = wid;\npmS = pm;\n\nout1 = bl + (dl - bl) * pf;\nout2 = br + (dr - br) * pf;\n"
                                                     }
                                                 },
                                                 {
@@ -1118,11 +1118,11 @@
                                     "numoutlets": 0,
                                     "patching_rect": [
                                         42.0,
-                                        393.0,
+                                        275.0,
                                         560.0,
                                         61.0
                                     ],
-                                    "text": "gen~ code MUST MATCH br.utility.stereo.2.1 (open both: same codebox). The four params are the plugin parameters (VST/AU). in 3-6 set the same params, so the exported external [br.utility.stereo.2.1~] has the same six inlets as the abstraction: L, R, Mode, Pan, Width, Pan Mode."
+                                    "text": "gen~ code MUST MATCH br.utility.stereo.2.2 (open both: same codebox). The four params are the plugin parameters (VST/AU). in 3-6 set the same params, so the exported external [br.utility.stereo.2.2~] has the same six inlets as the abstraction: L, R, Mode, Pan, Width, Pan Mode."
                                 }
                             },
                             {
@@ -3214,161 +3214,6 @@
                                     "text": "param Pan_Mode 0 @min 0 @max 1 @enum Balance Dual @order 4",
                                     "varname": "Pan_Mode"
                                 }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st10",
-                                    "maxclass": "newobj",
-                                    "text": "change",
-                                    "numinlets": 1,
-                                    "numoutlets": 3,
-                                    "outlettype": [
-                                        "",
-                                        "",
-                                        ""
-                                    ],
-                                    "patching_rect": [
-                                        305.0,
-                                        275.0,
-                                        50.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st20",
-                                    "maxclass": "newobj",
-                                    "text": "outport mode",
-                                    "numinlets": 1,
-                                    "numoutlets": 0,
-                                    "patching_rect": [
-                                        305.0,
-                                        310.0,
-                                        90.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st11",
-                                    "maxclass": "newobj",
-                                    "text": "change",
-                                    "numinlets": 1,
-                                    "numoutlets": 3,
-                                    "outlettype": [
-                                        "",
-                                        "",
-                                        ""
-                                    ],
-                                    "patching_rect": [
-                                        535.0,
-                                        275.0,
-                                        50.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st21",
-                                    "maxclass": "newobj",
-                                    "text": "outport pan",
-                                    "numinlets": 1,
-                                    "numoutlets": 0,
-                                    "patching_rect": [
-                                        535.0,
-                                        310.0,
-                                        90.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st12",
-                                    "maxclass": "newobj",
-                                    "text": "change",
-                                    "numinlets": 1,
-                                    "numoutlets": 3,
-                                    "outlettype": [
-                                        "",
-                                        "",
-                                        ""
-                                    ],
-                                    "patching_rect": [
-                                        765.0,
-                                        275.0,
-                                        50.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st22",
-                                    "maxclass": "newobj",
-                                    "text": "outport width",
-                                    "numinlets": 1,
-                                    "numoutlets": 0,
-                                    "patching_rect": [
-                                        765.0,
-                                        310.0,
-                                        90.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st13",
-                                    "maxclass": "newobj",
-                                    "text": "change",
-                                    "numinlets": 1,
-                                    "numoutlets": 3,
-                                    "outlettype": [
-                                        "",
-                                        "",
-                                        ""
-                                    ],
-                                    "patching_rect": [
-                                        995.0,
-                                        275.0,
-                                        50.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st23",
-                                    "maxclass": "newobj",
-                                    "text": "outport panmode",
-                                    "numinlets": 1,
-                                    "numoutlets": 0,
-                                    "patching_rect": [
-                                        995.0,
-                                        310.0,
-                                        90.0,
-                                        23.0
-                                    ]
-                                }
-                            },
-                            {
-                                "box": {
-                                    "id": "obj-st3",
-                                    "maxclass": "comment",
-                                    "numinlets": 1,
-                                    "numoutlets": 0,
-                                    "text": "State: each outport sends mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1 out of the rnbo~ rightmost outlet the moment it changes. Same as the State outlet of the abstractions.",
-                                    "patching_rect": [
-                                        42.0,
-                                        345.0,
-                                        520.0,
-                                        33.0
-                                    ]
-                                }
                             }
                         ],
                         "lines": [
@@ -3515,102 +3360,6 @@
                                         0
                                     ]
                                 }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "pMode",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st10",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "obj-st10",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st20",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "pPan",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st11",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "obj-st11",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st21",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "pWidth",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st12",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "obj-st12",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st22",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "pPan_Mode",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st13",
-                                        0
-                                    ]
-                                }
-                            },
-                            {
-                                "patchline": {
-                                    "source": [
-                                        "obj-st13",
-                                        0
-                                    ],
-                                    "destination": [
-                                        "obj-st23",
-                                        0
-                                    ]
-                                }
                             }
                         ]
                     },
@@ -3738,7 +3487,7 @@
                         340.0,
                         87.0
                     ],
-                    "text": "EXPORT NAME: br.utility.stereo.2.1~\nMax External Export asks for a name: keep the ~ at the end. Without it the external has the same name as the abstraction br.utility.stereo.2.1, and Max loads whichever it finds first. Audio Plugin Export (VST3/AU): any name; the Mode, Pan, Width and Pan_Mode params appear in your DAW."
+                    "text": "EXPORT NAME: br.utility.stereo.2.2~\nMax External Export asks for a name: keep the ~ at the end. Without it the external has the same name as the abstraction br.utility.stereo.2.2, and Max loads whichever it finds first. Audio Plugin Export (VST3/AU): any name; the Mode, Pan, Width and Pan_Mode params appear in your DAW."
                 }
             },
             {
@@ -3813,119 +3562,6 @@
                         232.0,
                         168.0,
                         169.0,
-                        22.0
-                    ]
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-st4",
-                    "maxclass": "comment",
-                    "numinlets": 1,
-                    "numoutlets": 0,
-                    "text": "rnbo~ rightmost outlet = State: mode 0-5, pan -100 to 100, width 0-200 and panmode 0/1 (from the outports inside).",
-                    "patching_rect": [
-                        369.0,
-                        204.0,
-                        443.0,
-                        20.0
-                    ]
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-st5",
-                    "maxclass": "newobj",
-                    "text": "route mode pan width panmode",
-                    "numinlets": 2,
-                    "numoutlets": 5,
-                    "outlettype": [
-                        "",
-                        "",
-                        "",
-                        "",
-                        ""
-                    ],
-                    "patching_rect": [
-                        115.0,
-                        265.0,
-                        220.0,
-                        22.0
-                    ]
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-st60",
-                    "maxclass": "number",
-                    "numinlets": 1,
-                    "numoutlets": 2,
-                    "outlettype": [
-                        "",
-                        "bang"
-                    ],
-                    "parameter_enable": 0,
-                    "patching_rect": [
-                        115.0,
-                        304.0,
-                        50.0,
-                        22.0
-                    ]
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-st61",
-                    "maxclass": "flonum",
-                    "numinlets": 1,
-                    "numoutlets": 2,
-                    "outlettype": [
-                        "",
-                        "bang"
-                    ],
-                    "parameter_enable": 0,
-                    "patching_rect": [
-                        170.0,
-                        304.0,
-                        50.0,
-                        22.0
-                    ]
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-st62",
-                    "maxclass": "flonum",
-                    "numinlets": 1,
-                    "numoutlets": 2,
-                    "outlettype": [
-                        "",
-                        "bang"
-                    ],
-                    "parameter_enable": 0,
-                    "patching_rect": [
-                        225.0,
-                        304.0,
-                        50.0,
-                        22.0
-                    ]
-                }
-            },
-            {
-                "box": {
-                    "id": "obj-st63",
-                    "maxclass": "number",
-                    "numinlets": 1,
-                    "numoutlets": 2,
-                    "outlettype": [
-                        "",
-                        "bang"
-                    ],
-                    "parameter_enable": 0,
-                    "patching_rect": [
-                        280.0,
-                        304.0,
-                        50.0,
                         22.0
                     ]
                 }
@@ -4048,66 +3684,6 @@
                     ],
                     "source": [
                         "obj-attr3",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-7",
-                        2
-                    ],
-                    "destination": [
-                        "obj-st5",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-st5",
-                        0
-                    ],
-                    "destination": [
-                        "obj-st60",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-st5",
-                        1
-                    ],
-                    "destination": [
-                        "obj-st61",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-st5",
-                        2
-                    ],
-                    "destination": [
-                        "obj-st62",
-                        0
-                    ]
-                }
-            },
-            {
-                "patchline": {
-                    "source": [
-                        "obj-st5",
-                        3
-                    ],
-                    "destination": [
-                        "obj-st63",
                         0
                     ]
                 }
